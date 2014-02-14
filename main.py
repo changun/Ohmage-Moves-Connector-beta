@@ -24,13 +24,10 @@ from datetime import datetime
 from google.appengine.api import urlfetch
 
 MOVES_ACCESS_TOKEN_ENDPOINT = "https://api.moves-app.com/oauth/v1/access_token"
-
 STREAM_VERSION = 20140213
-
 OHMAGE_MOVES_CONNECTOR = "Ohmage-Moves-Connector"
 OHMAGE_MOVES_STREAM = "org.ohmage.Moves"
-
-ROOT_URL = "http://localhost:8080/"
+ROOT_URL = "https://ohmage-moves-connector.appspot.com/"
 CLIENT_ID = "0N2iXQ5Mu5a7js6tB66390ywpEC6P9A9"
 CLIENT_SECRET = "zRGrj59CNFJm9aawWg38Yiz2Y33k1qXb5D6SDm7uUh2ZAwqPb8274uTCpbY7qH8O"
 
@@ -147,61 +144,62 @@ class OhmageAuthHandler(webapp2.RequestHandler):
 
 class MovesAuthHandler(webapp2.RequestHandler):
     def get(self):
-        # recreate redirected url (must be identical as what we submitted to authorize endpoint)
-        redirected_url = ROOT_URL+"auth/?token="+self.request.GET["token"]
-        token = DecodeAES(cipher,self.request.GET["token"])
-        # prepare POST form for access token
-        form_fields = {
-          'grant_type':'authorization_code',
-          'code':self.request.GET['code'],
-          "client_id": CLIENT_ID,
-          'client_secret': CLIENT_SECRET,
-          'redirect_uri': redirected_url
-        }
-        form_data = urllib.urlencode(form_fields)
-        result = urlfetch.fetch(url=MOVES_ACCESS_TOKEN_ENDPOINT,
-            payload=form_data,
-            method=urlfetch.POST,
-            headers={'Content-Type': 'application/x-www-form-urlencoded'})
-
-        result = json.loads(result.content)
-        # we have got the access token!
-        if 'access_token' in result:
-            access_token = result["access_token"]
-            # get iso8601 timestamp with timezone
-            iso8601 = datetime.utcnow().isoformat() + "+00:00"
-            # prepare stream data
-            data = [{"stream_id":"oauth",
-                    "stream_version": STREAM_VERSION,
-                    "metadata": {"id":iso8601,"timestamp":iso8601},
-                    "data": result}]
-            # prepare stream upload post
+        if "code" in self.request.GET :
+            # recreate redirected url (must be identical as what we submitted to authorize endpoint)
+            redirected_url = ROOT_URL+"auth/?token="+self.request.GET["token"]
+            token = DecodeAES(cipher,self.request.GET["token"])
+            # prepare POST form for access token
             form_fields = {
-              'auth_token': token,
-              'observer_id': OHMAGE_MOVES_STREAM,
-              "observer_version": STREAM_VERSION,
-              'data': json.dumps(data),
-              'client': OHMAGE_MOVES_CONNECTOR
+              'grant_type':'authorization_code',
+              'code':self.request.GET['code'],
+              "client_id": CLIENT_ID,
+              'client_secret': CLIENT_SECRET,
+              'redirect_uri': redirected_url
             }
             form_data = urllib.urlencode(form_fields)
-            result = urlfetch.fetch(url="https://test.ohmage.org/app/stream/upload",
-                                payload=form_data,
-                                method=urlfetch.POST,
-                                headers={'Content-Type': 'application/x-www-form-urlencoded'})
+            result = urlfetch.fetch(url=MOVES_ACCESS_TOKEN_ENDPOINT,
+                payload=form_data,
+                method=urlfetch.POST,
+                headers={'Content-Type': 'application/x-www-form-urlencoded'})
+
             result = json.loads(result.content)
-            if result["result"]=="success" and len(result["invalid_points"]) == 0:
-                # successfully upload to ohmage, now try out the acces token
-                response = urlfetch.fetch(url="https://api.moves-app.com/api/1.1/user/profile?access_token=" + access_token,
-                                method=urlfetch.GET,
-                                headers={'Content-Type': 'application/x-www-form-urlencoded'})
-                # get user's profile
-                profile = json.loads(response.content)
-                first_date = profile["profile"]["firstDate"]
-                first_date = first_date[0:4] + "/"+ first_date[4:6] + "/"  + first_date[6:8]
-                # render congratulation page
-                path = os.path.join(os.path.dirname(__file__), 'templates/congratulations.html')
-                self.response.out.write(template.render(path, {'data_since':first_date }))
-                return
+            # we have got the access token!
+            if 'access_token' in result:
+                access_token = result["access_token"]
+                # get iso8601 timestamp with timezone
+                iso8601 = datetime.utcnow().isoformat() + "+00:00"
+                # prepare stream data
+                data = [{"stream_id":"oauth",
+                        "stream_version": STREAM_VERSION,
+                        "metadata": {"id":iso8601,"timestamp":iso8601},
+                        "data": result}]
+                # prepare stream upload post
+                form_fields = {
+                  'auth_token': token,
+                  'observer_id': OHMAGE_MOVES_STREAM,
+                  "observer_version": STREAM_VERSION,
+                  'data': json.dumps(data),
+                  'client': OHMAGE_MOVES_CONNECTOR
+                }
+                form_data = urllib.urlencode(form_fields)
+                result = urlfetch.fetch(url="https://test.ohmage.org/app/stream/upload",
+                                    payload=form_data,
+                                    method=urlfetch.POST,
+                                    headers={'Content-Type': 'application/x-www-form-urlencoded'})
+                result = json.loads(result.content)
+                if result["result"]=="success" and len(result["invalid_points"]) == 0:
+                    # successfully upload to ohmage, now try out the acces token
+                    response = urlfetch.fetch(url="https://api.moves-app.com/api/1.1/user/profile?access_token=" + access_token,
+                                    method=urlfetch.GET,
+                                    headers={'Content-Type': 'application/x-www-form-urlencoded'})
+                    # get user's profile
+                    profile = json.loads(response.content)
+                    first_date = profile["profile"]["firstDate"]
+                    first_date = first_date[0:4] + "/"+ first_date[4:6] + "/"  + first_date[6:8]
+                    # render congratulation page
+                    path = os.path.join(os.path.dirname(__file__), 'templates/congratulations.html')
+                    self.response.out.write(template.render(path, {'data_since':first_date }))
+                    return
 
         # we only get here if something went wrong
         path = os.path.join(os.path.dirname(__file__), 'templates/index.html')

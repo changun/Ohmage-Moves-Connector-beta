@@ -3,15 +3,16 @@
 <head>
   <meta charset="utf-8">
     <!-- jquery -->
-    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
     <!-- bootstrap -->
     <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.0/css/bootstrap.min.css" rel="stylesheet">
     <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.0/js/bootstrap.min.js"></script>
 
     <!-- for notification -->
     <script src="https://rawgithub.com/justindomingue/ohSnap/master/ohsnap.js" type="text/javascript" charset="utf-8"></script>
-    <link href="http://justindomingue.github.io/ohSnap/stylesheets/app.css" rel="stylesheet">
+    <link href="/stylesheet/app.css" rel="stylesheet">
 
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <title>Ohmage-Moves Connector</title>
 </head>
@@ -27,22 +28,22 @@
 					Hi, there!
 				</h1>
 				<p>
-					This app connects your Moves account with ohmage. It will upload the access token for your Moves account to ohmage.<br>
+					This app connects your Moves account with ohmage.
                     To opt-in please enter your <b>ohmage</b> credentials and follow the instructions in the next page.
 				</p><br>
+                <form>
 
-
-                <div class="form-group">
-					 <label for="username">Username</label><input class="form-control" id="username" type="text" name="username">
-				</div>
-                <div class="form-group">
-					 <label for="password">Password</label><input class="form-control" id="password" type="password" name="password">
-				</div>
-                  <div class="form-group">
-				    <button type="submit" class="btn btn-default" id="submit">Enter</button>
-                  </div>
-                    <p class="help-block"> We currently only support users on <i>test.ohamge.org</i>.</p>
-
+                    <div class="form-group">
+                         <label for="username">Username</label><input class="form-control" id="username" type="text" name="username">
+                    </div>
+                    <div class="form-group">
+                         <label for="password">Password</label><input class="form-control" id="password" type="password" name="password">
+                    </div>
+                      <div class="form-group">
+                        <button type="submit" class="btn btn-default" id="submit">Enter</button>
+                      </div>
+                        <p class="help-block"> We currently only support users on <i>test.ohamge.org</i>.</p>
+                </form>
 
 			</div>
 
@@ -57,6 +58,7 @@
 
 <script>
     var submit_handler = function(e){
+        e.preventDefault();
           var data =  { username: $("#username").val(), password: $("#password").val() };
           $.post( "/ohmage_auth/",
                 data, // data
@@ -75,7 +77,7 @@
 
     };
 
-  $("#submit").click(submit_handler);
+  $("form").submit(submit_handler);
   // if there is a warning placed by the backend code
   var warning='{{warning}}';
   if(warning != ""){

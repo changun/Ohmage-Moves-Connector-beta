@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<observer>
+    <id>org.ohmage.Moves</id>
+    <version>20140213</version>
+
+    <name>Moves</name>
+    <description>This observer store the Moves' OAuth credentials and Moves data</description>
+    <versionString>0.1</versionString>
+
+    <stream>
+        <id>oauth</id>
+        <version>20140213</version>
+
+        <name>OAuth Credential</name>
+        <description>Thie user's Moves oauth credentials</description>
+
+        <metadata>
+            <timestamp />
+        </metadata>
+
+        <schema>
+            {
+                "type":"object",
+                "doc":"oauth object returned from moves",
+                "fields":[
+                    {
+                        "name":"access_token",
+                        "doc":"oauth access token from Moves",
+                        "type":"string"
+                    },
+                    {
+                        "name":"refresh_token",
+                        "doc":"the token used to refresh the access token when it expired",
+                        "type":"string"
+                    },
+                    {
+                        "name":"user_id",
+                        "doc":"The moves user id",
+                        "type":"number"
+                    },
+                    {
+                        "name":"expires_in",
+                        "doc":"the access token lifetime in seconds",
+                        "type":"number"
+                    }
+                ]
+            }
+        </schema>
+    </stream>
+
+
+</observer>
